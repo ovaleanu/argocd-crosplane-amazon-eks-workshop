@@ -14,39 +14,39 @@ spec:
               values:
                 addonChart: aws-efs-csi-driver
                 # anything not staging or prod use this version
-                addonChartVersion: 2.4.9
+                addonChartVersion: 2.5.6
                 addonChartRepository: https://kubernetes-sigs.github.io/aws-efs-csi-driver
               selector:
                 matchExpressions:
                   - key: enable_aws_efs_csi_driver
                     operator: In
-                    values: ['true']
+                    values: ["true"]
           - clusters:
               selector:
                 matchLabels:
                   environment: staging
               values:
-                addonChartVersion: 2.4.9
+                addonChartVersion: 2.5.6
           - clusters:
               selector:
                 matchLabels:
                   environment: prod
               values:
-                addonChartVersion: 2.4.9
+                addonChartVersion: 2.5.6
   template:
     metadata:
       name: addon-{{name}}-{{values.addonChart}}
     spec:
       project: default
       sources:
-        - repoURL: '{{metadata.annotations.addons_repo_url}}'
-          targetRevision: '{{metadata.annotations.addons_repo_revision}}'
+        - repoURL: "{{metadata.annotations.addons_repo_url}}"
+          targetRevision: "{{metadata.annotations.addons_repo_revision}}"
           ref: values
-        - chart: '{{values.addonChart}}'
-          repoURL: '{{values.addonChartRepository}}'
-          targetRevision: '{{values.addonChartVersion}}'
+        - chart: "{{values.addonChart}}"
+          repoURL: "{{values.addonChartRepository}}"
+          targetRevision: "{{values.addonChartVersion}}"
           helm:
-            releaseName: '{{values.addonChart}}'
+            releaseName: "{{values.addonChart}}"
             ignoreMissingValueFiles: true
             valueFiles:
               - $values/{{metadata.annotations.addons_repo_basepath}}charts/addons/{{values.addonChart}}/values.yaml
@@ -64,10 +64,10 @@ spec:
                   annotations:
                     eks.amazonaws.com/role-arn: {{metadata.annotations.aws_efs_csi_driver_iam_role_arn}}
       destination:
-        namespace: '{{metadata.annotations.aws_efs_csi_driver_namespace}}'
-        name: '{{name}}'
+        namespace: "{{metadata.annotations.aws_efs_csi_driver_namespace}}"
+        name: "{{name}}"
       syncPolicy:
         automated: {}
         syncOptions:
           - CreateNamespace=true
-          - ServerSideApply=true  # Big CRDs.
+          - ServerSideApply=true # Big CRDs.

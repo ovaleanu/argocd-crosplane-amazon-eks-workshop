@@ -13,7 +13,6 @@ variable "addons" {
   type        = any
   default = {
     enable_aws_load_balancer_controller = true
-    enable_ack_dynamodb                 = true
     enable_metrics_server               = true
   }
 }

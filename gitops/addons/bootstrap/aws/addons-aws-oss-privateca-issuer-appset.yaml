@@ -14,39 +14,39 @@ spec:
               values:
                 addonChart: aws-privateca-issuer
                 # anything not staging or prod use this version
-                addonChartVersion: v1.2.5
+                addonChartVersion: v1.2.7
                 addonChartRepository: https://cert-manager.github.io/aws-privateca-issuer
               selector:
                 matchExpressions:
                   - key: enable_aws_privateca_issuer
                     operator: In
-                    values: ['true']
+                    values: ["true"]
           - clusters:
               selector:
                 matchLabels:
                   environment: staging
               values:
-                addonChartVersion: v1.2.5
+                addonChartVersion: v1.2.7
           - clusters:
               selector:
                 matchLabels:
                   environment: prod
               values:
-                addonChartVersion: v1.2.5
+                addonChartVersion: v1.2.7
   template:
     metadata:
       name: addon-{{name}}-{{values.addonChart}}
     spec:
       project: default
       sources:
-        - repoURL: '{{metadata.annotations.addons_repo_url}}'
-          targetRevision: '{{metadata.annotations.addons_repo_revision}}'
+        - repoURL: "{{metadata.annotations.addons_repo_url}}"
+          targetRevision: "{{metadata.annotations.addons_repo_revision}}"
           ref: values
-        - chart: '{{values.addonChart}}'
-          repoURL: '{{values.addonChartRepository}}'
-          targetRevision: '{{values.addonChartVersion}}'
+        - chart: "{{values.addonChart}}"
+          repoURL: "{{values.addonChartRepository}}"
+          targetRevision: "{{values.addonChartVersion}}"
           helm:
-            releaseName: '{{values.addonChart}}'
+            releaseName: "{{values.addonChart}}"
             ignoreMissingValueFiles: true
             valueFiles:
               - $values/{{metadata.annotations.addons_repo_basepath}}charts/addons/{{values.addonChart}}/values.yaml
@@ -58,10 +58,10 @@ spec:
                 annotations:
                   eks.amazonaws.com/role-arn: {{metadata.annotations.aws_privateca_issuer_iam_role_arn}}
       destination:
-        namespace: '{{metadata.annotations.aws_privateca_issuer_namespace}}'
-        name: '{{name}}'
+        namespace: "{{metadata.annotations.aws_privateca_issuer_namespace}}"
+        name: "{{name}}"
       syncPolicy:
         automated: {}
         syncOptions:
           - CreateNamespace=true
-          - ServerSideApply=true  # Big CRDs.
+          - ServerSideApply=true # Big CRDs.

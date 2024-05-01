@@ -20,7 +20,7 @@ spec:
                 matchExpressions:
                   - key: enable_aws_node_termination_handler
                     operator: In
-                    values: ['true']
+                    values: ["true"]
           - clusters:
               selector:
                 matchLabels:
@@ -39,14 +39,14 @@ spec:
     spec:
       project: default
       sources:
-        - repoURL: '{{metadata.annotations.addons_repo_url}}'
-          targetRevision: '{{metadata.annotations.addons_repo_revision}}'
+        - repoURL: "{{metadata.annotations.addons_repo_url}}"
+          targetRevision: "{{metadata.annotations.addons_repo_revision}}"
           ref: values
-        - chart: '{{values.addonChart}}'
-          repoURL: '{{values.addonChartRepository}}'
-          targetRevision: '{{values.addonChartVersion}}'
+        - chart: "{{values.addonChart}}"
+          repoURL: "{{values.addonChartRepository}}"
+          targetRevision: "{{values.addonChartVersion}}"
           helm:
-            releaseName: '{{values.addonChart}}'
+            releaseName: "{{values.addonChart}}"
             ignoreMissingValueFiles: true
             valueFiles:
               - $values/{{metadata.annotations.addons_repo_basepath}}charts/addons/{{values.addonChart}}/values.yaml
@@ -61,10 +61,10 @@ spec:
                 annotations:
                   eks.amazonaws.com/role-arn: {{metadata.annotations.aws_node_termination_handler_iam_role_arn}}
       destination:
-        namespace: '{{metadata.annotations.aws_node_termination_handler_namespace}}'
-        name: '{{name}}'
+        namespace: "{{metadata.annotations.aws_node_termination_handler_namespace}}"
+        name: "{{name}}"
       syncPolicy:
         automated: {}
         syncOptions:
           - CreateNamespace=true
-          - ServerSideApply=true  # Big CRDs.
+          - ServerSideApply=true # Big CRDs.

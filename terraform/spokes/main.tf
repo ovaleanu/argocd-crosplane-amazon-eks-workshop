@@ -84,14 +84,6 @@ locals {
     enable_aws_gateway_api_controller            = try(var.addons.enable_aws_gateway_api_controller, false)
     enable_aws_ebs_csi_resources                 = try(var.addons.enable_aws_ebs_csi_resources, false)
     enable_aws_secrets_store_csi_driver_provider = try(var.addons.enable_aws_secrets_store_csi_driver_provider, false)
-    enable_ack_apigatewayv2                      = try(var.addons.enable_ack_apigatewayv2, false)
-    enable_ack_dynamodb                          = try(var.addons.enable_ack_dynamodb, false)
-    enable_ack_s3                                = try(var.addons.enable_ack_s3, false)
-    enable_ack_rds                               = try(var.addons.enable_ack_rds, false)
-    enable_ack_prometheusservice                 = try(var.addons.enable_ack_prometheusservice, false)
-    enable_ack_emrcontainers                     = try(var.addons.enable_ack_emrcontainers, false)
-    enable_ack_sfn                               = try(var.addons.enable_ack_sfn, false)
-    enable_ack_eventbridge                       = try(var.addons.enable_ack_eventbridge, false)
   }
   oss_addons = {
     enable_argocd                          = try(var.addons.enable_argocd, false)
@@ -242,82 +234,6 @@ module "eks_blueprints_addons" {
   enable_aws_gateway_api_controller   = try(local.aws_addons.enable_aws_gateway_api_controller, false)
 
   tags = local.tags
-}
-
-################################################################################
-# EKS ACK Addons
-################################################################################
-module "eks_ack_addons" {
-  source = "aws-ia/eks-ack-addons/aws"
-
-  cluster_name      = module.eks.cluster_name
-  cluster_endpoint  = module.eks.cluster_endpoint
-  oidc_provider_arn = module.eks.oidc_provider_arn
-
-  # Using GitOps Bridge
-  create_kubernetes_resources = false
-
-  # ACK Controllers to enable
-  enable_apigatewayv2      = try(local.aws_addons.enable_ack_apigatewayv2, false)
-  enable_dynamodb          = try(local.aws_addons.enable_ack_dynamodb, false)
-  enable_s3                = try(local.aws_addons.enable_ack_s3, false)
-  enable_rds               = try(local.aws_addons.enable_ack_rds, false)
-  enable_prometheusservice = try(local.aws_addons.enable_ack_prometheusservice, false)
-  enable_emrcontainers     = try(local.aws_addons.enable_ack_emrcontainers, false)
-  enable_sfn               = try(local.aws_addons.enable_ack_sfn, false)
-  enable_eventbridge       = try(local.aws_addons.enable_ack_eventbridge, false)
-
-  tags = local.tags
-}
-
-################################################################################
-# Dynamo DB IAM Role
-################################################################################
-locals {
-  table_name = local.environment == "prod" ? "Items-Prod" : "Items-Staging"
-}
-
-module "dynamodb_workshop_irsa_aws" {
-  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.14"
-
-  role_name = "carts-${local.environment}-role"
-
-  role_policy_arns = {
-    dynamodb = aws_iam_policy.dynamodb_workshop.arn
-  }
-
-  oidc_providers = {
-    main = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["carts:carts"]
-    }
-  }
-
-  tags = local.tags
-}
-
-resource "aws_iam_policy" "dynamodb_workshop" {
-  name_prefix = "argocd-workshop"
-  description = "IAM policy for ArgoCD on EKS Workshop DynamoDB"
-  path        = "/"
-  policy      = data.aws_iam_policy_document.dynamodb_workshop.json
-
-  tags = local.tags
-}
-
-data "aws_iam_policy_document" "dynamodb_workshop" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "dynamodb:*"
-    ]
-
-    resources = [
-      "arn:aws:dynamodb:${local.region}:${data.aws_caller_identity.current.account_id}:table/${local.table_name}",
-      "arn:aws:dynamodb:${local.region}:${data.aws_caller_identity.current.account_id}:table/${local.table_name}/index/*"
-    ]
-  }
 }
 
 ################################################################################

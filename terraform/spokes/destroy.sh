@@ -24,7 +24,6 @@ if [[ ! $(cat $TMPFILE) == *"No outputs found"* ]]; then
   echo "No outputs found, skipping kubectl delete"
   source "$TMPFILE"
   kubectl delete svc --all -n ui
-  kubectl delete -A tables.dynamodb.services.k8s.aws --all
 fi
 
 terraform -chdir=$SCRIPTDIR destroy -target="module.gitops_bridge_bootstrap_hub" -auto-approve -var-file="workspaces/${env}.tfvars"
