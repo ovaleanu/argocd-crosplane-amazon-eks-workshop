@@ -36,26 +36,26 @@ spec:
                 addonChartVersion: 6.6.0
   template:
     metadata:
-      name: addon-{{.name}}-aws-{{.values.addonChart}}
+      name: addon-{{name}}-aws-{{values.addonChart}}
     spec:
       project: default
       sources:
-        - repoURL: "{{.metadata.annotations.addons_repo_url}}"
-          targetRevision: "{{.metadata.annotations.addons_repo_revision}}"
+        - repoURL: "{{metadata.annotations.addons_repo_url}}"
+          targetRevision: "{{metadata.annotations.addons_repo_revision}}"
           ref: values
-        - chart: "{{.values.addonChart}}"
-          repoURL: "{{.values.addonChartRepository}}"
-          targetRevision: "{{.values.addonChartVersion}}"
+        - chart: "{{values.addonChart}}"
+          repoURL: "{{values.addonChartRepository}}"
+          targetRevision: "{{values.addonChartVersion}}"
           helm:
-            releaseName: "{{.values.addonChart}}"
+            releaseName: "{{values.addonChart}}"
             ignoreMissingValueFiles: true
             valueFiles:
-              - $values/{{.metadata.annotations.addons_repo_basepath}}charts/addons/{{values.addonChart}}/values.yaml
-              - $values/{{.metadata.annotations.addons_repo_basepath}}environments/{{.metadata.labels.environment}}/addons/{{.values.addonChart}}/values.yaml
-              - $values/{{.metadata.annotations.addons_repo_basepath}}clusters/{{.name}}/addons/{{.values.addonChart}}/values.yaml
+              - $values/{{metadata.annotations.addons_repo_basepath}}charts/addons/{{values.addonChart}}/values.yaml
+              - $values/{{metadata.annotations.addons_repo_basepath}}environments/{{metadata.labels.environment}}/addons/{{values.addonChart}}/values.yaml
+              - $values/{{metadata.annotations.addons_repo_basepath}}environments/clusters/{{name}}/addons/{{values.addonChart}}/values.yaml
             values: |
               global:
-                domain: {{.metadata.annotations.argocd_domain}}
+                domain: {{metadata.annotations.argocd_domain}}
               server:
                 service:
                   type: "ClusterIP"
@@ -74,8 +74,8 @@ spec:
                     serviceType: "ClusterIP"  # Instance mode needs type NodePort, IP mode needs type ClusterIP or NodePort
                     backendProtocolVersion: "GRPC"  # This tells AWS to send traffic from the ALB using HTTP2. Can use gRPC as well if you want to leverage gRPC specific features
       destination:
-        namespace: '{{default "argocd" .metadata.annotations.argocd_namespace}}'
-        name: "{{.name}}"
+        namespace: '{{default "argocd" metadata.annotations.argocd_namespace}}'
+        name: "{{name}}"
       syncPolicy:
         automated: {}
         syncOptions:

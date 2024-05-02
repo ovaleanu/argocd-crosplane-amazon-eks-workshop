@@ -10,18 +10,6 @@ variable "kubernetes_version" {
   default     = "1.28"
 }
 
-variable "addons" {
-  description = "EKS addons"
-  type        = any
-  default = {
-    enable_aws_crossplane_provider         = false # installs aws contrib provider
-    enable_aws_crossplane_upbound_provider = false # installs aws upbound provider
-    enable_crossplane_kubernetes_provider  = false # installs kubernetes provider
-    enable_crossplane_helm_provider        = false # installs helm provider
-    enable_crossplane                      = false # installs crossplane core
-  }
-}
-
 variable "aws_auth_roles" {
   description = "additional aws auth roles"
   type = list(

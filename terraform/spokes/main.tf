@@ -74,6 +74,8 @@ locals {
     enable_aws_privateca_issuer                  = try(var.addons.enable_aws_privateca_issuer, false)
     enable_cluster_autoscaler                    = try(var.addons.enable_cluster_autoscaler, false)
     enable_external_dns                          = try(var.addons.enable_external_dns, false)
+    enable_aws_crossplane_provider               = try(var.addons.enable_aws_crossplane_provider, false)
+    enable_aws_crossplane_upbound_provider       = try(var.addons.enable_aws_crossplane_upbound_provider, false)
     enable_external_secrets                      = try(var.addons.enable_external_secrets, false)
     enable_aws_load_balancer_controller          = try(var.addons.enable_aws_load_balancer_controller, false)
     enable_fargate_fluentbit                     = try(var.addons.enable_fargate_fluentbit, false)
@@ -93,6 +95,9 @@ locals {
     enable_cluster_proportional_autoscaler = try(var.addons.enable_cluster_proportional_autoscaler, false)
     enable_gatekeeper                      = try(var.addons.enable_gatekeeper, false)
     enable_gpu_operator                    = try(var.addons.enable_gpu_operator, false)
+    enable_crossplane                      = try(var.addons.enable_crossplane, false)
+    enable_crossplane_kubernetes_provider  = try(var.addons.enable_crossplane_kubernetes_provider, false)
+    enable_crossplane_helm_provider        = try(var.addons.enable_crossplane_helm_provider, false)
     enable_ingress_nginx                   = try(var.addons.enable_ingress_nginx, false)
     enable_kyverno                         = try(var.addons.enable_kyverno, false)
     enable_kube_prometheus_stack           = try(var.addons.enable_kube_prometheus_stack, false)
@@ -111,12 +116,15 @@ locals {
 
   addons_metadata = merge(
     module.eks_blueprints_addons.gitops_metadata,
-    module.eks_ack_addons.gitops_metadata,
     {
       aws_cluster_name = module.eks.cluster_name
       aws_region       = local.region
       aws_account_id   = data.aws_caller_identity.current.account_id
       aws_vpc_id       = module.vpc.vpc_id
+    },
+    {
+      aws_crossplane_iam_role_arn         = module.crossplane_irsa_aws.iam_role_arn
+      aws_upbound_crossplane_iam_role_arn = module.crossplane_irsa_aws.iam_role_arn
     },
     {
       addons_repo_url      = local.gitops_addons_url
@@ -234,6 +242,84 @@ module "eks_blueprints_addons" {
   enable_aws_gateway_api_controller   = try(local.aws_addons.enable_aws_gateway_api_controller, false)
 
   tags = local.tags
+}
+
+################################################################################
+# Crossplane
+################################################################################
+locals {
+  crossplane_namespace = "crossplane-system"
+  crossplane_sa        = "provider-aws"
+}
+
+module "crossplane_irsa_aws" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.14"
+
+  role_name_prefix = "${local.name}-crossplane-"
+
+  role_policy_arns = {
+    policy = "arn:aws:iam::aws:policy/AdministratorAccess"
+  }
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["${local.crossplane_namespace}:${local.crossplane_sa}"]
+    }
+  }
+
+  tags = local.tags
+}
+
+################################################################################
+# Dynamo DB IAM Role
+################################################################################
+locals {
+  table_name = local.environment == "prod" ? "Items-Prod" : "Items-Staging"
+}
+
+module "dynamodb_workshop_irsa_aws" {
+  source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version = "~> 5.14"
+
+  role_name = "carts-${local.environment}-role"
+
+  role_policy_arns = {
+    dynamodb = aws_iam_policy.dynamodb_workshop.arn
+  }
+
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["carts:carts"]
+    }
+  }
+
+  tags = local.tags
+}
+
+resource "aws_iam_policy" "dynamodb_workshop" {
+  name_prefix = "argocd-workshop"
+  description = "IAM policy for ArgoCD on EKS Workshop DynamoDB"
+  path        = "/"
+  policy      = data.aws_iam_policy_document.dynamodb_workshop.json
+
+  tags = local.tags
+}
+
+data "aws_iam_policy_document" "dynamodb_workshop" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:*"
+    ]
+
+    resources = [
+      "arn:aws:dynamodb:${local.region}:${data.aws_caller_identity.current.account_id}:table/${local.table_name}",
+      "arn:aws:dynamodb:${local.region}:${data.aws_caller_identity.current.account_id}:table/${local.table_name}/index/*"
+    ]
+  }
 }
 
 ################################################################################
