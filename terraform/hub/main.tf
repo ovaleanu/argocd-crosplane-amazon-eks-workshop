@@ -84,7 +84,7 @@ locals {
     enable_aws_argocd = true
   }
   oss_addons = {
-    # enable_argocd                          = true
+    enable_argocd = false
     # enable_argo_rollouts                   = true
     # enable_argo_events                     = true
     # enable_argo_workflows                  = true

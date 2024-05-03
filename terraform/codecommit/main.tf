@@ -21,7 +21,7 @@ locals {
   git_private_ssh_key_config = "${local.ssh_key_basepath}/config"
   ssh_host                   = "git-codecommit.*.amazonaws.com"
   ssh_config                 = <<-EOF
-  # AWS Workshop https://github.com/aws-samples/argocd-on-amazon-eks-workshop.git
+  # AWS Workshop https://github.com/ovaleanu/argocd-crosplane-amazon-eks-workshop.git
   Host ${local.ssh_host}
     User ${aws_iam_user.gitops.unique_id}
     IdentityFile ${local.git_private_ssh_key}
